@@ -14,23 +14,35 @@ function sendHttpRequest(method, url, data) {
         xhr.responseType = 'json';
 
         xhr.onload = function () {
-            resolve(xhr.response);
+            if (xhr.status >= 200 && xhr.status < 300) {
+                resolve(xhr.response);
+            } else {
+                reject(new Error('Something went wrong!'));
+            }
             // const listOfPosts = JSON.parse(xhr.response);  //we commented this out to instead get the same by setting the xhr.responseType to 'json'
 
+        };
+
+        xhr.onerror = function () {
+            reject(new Error('Failed to send request!'));
         };
 
         xhr.send(JSON.stringify(data));
     });
 }
 
-function fetchPosts() {
-    listElement.innerHTML = '';
-    sendHttpRequest('GET', 'https://jsonplaceholder.typicode.com/posts')
-        .then((responseData => {
-                console.log(responseData);
-                generateTemplatedPost(responseData);
-            })
-        );
+async function fetchPosts() {
+    try {
+        listElement.innerHTML = '';
+        await sendHttpRequest('GET', 'https://jsonplaceholder.typicode.com/posts')
+            .then((responseData => {
+                    generateTemplatedPost(responseData);
+                })
+            );
+    } catch (err) {
+        console.log(err);
+    }
+
 }
 
 fetchPostsButton.addEventListener('click', fetchPosts);
@@ -58,7 +70,7 @@ const generateTemplatedPost = (postData) => {
 };
 
 listElement.addEventListener('click', event => {
-    if (event.target.tagName === 'BUTTON'){
+    if (event.target.tagName === 'BUTTON') {
         const id = event.target.closest('li').dataset['id'];
         postDeleteButtonHandler(id);
         const postElement = listElement.querySelector(`li[data-id="${id}"]`);
