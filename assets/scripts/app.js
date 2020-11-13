@@ -6,11 +6,38 @@ const fetchPostsButton = document.querySelector('#available-posts > button');
 // const addNewPostSubmit = document.querySelector('#new-post button');
 const addNewPostForm = document.querySelector('#new-post form');
 
+//Lets see how we can do sendHttpRequest() using fetch() instead of XMLHttpRequest()
 function sendHttpRequest(method, url, data) {
+    return fetch(url, {
+        method: method,
+        body: JSON.stringify(data),
+        headers: {
+            'Content-Type': 'application/json',
+            "test": "this is a test header",
+        }
+    }).then(response => {
+        if (response.status >= 200 && response.status < 300) {
+            return response.json();
+        } else {
+            return response.json().then(errData => {
+                //console.log(errData);
+                console.log('nested error message');
+                throw new Error('Fetch returned unsuccessful status');
+            });
+        }
+    }).catch(err => {
+        console.log(err);
+        throw new Error('Fetch init failed');
+    });
+}
+
+function sendHttpRequestRenamed(method, url, data) {
     //promisifying...
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open(method, url);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('test', 'XMLHttpRequest test header');
         xhr.responseType = 'json';
 
         xhr.onload = function () {
@@ -34,7 +61,7 @@ function sendHttpRequest(method, url, data) {
 async function fetchPosts() {
     try {
         listElement.innerHTML = '';
-        await sendHttpRequest('GET', 'https://jsonplaceholder.typicode.com/posts')
+        await sendHttpRequest('GET', 'https://jsonplaceholder.typicode.com/posts_INVALID')
             .then((responseData => {
                     generateTemplatedPost(responseData);
                 })
